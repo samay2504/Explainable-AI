@@ -1,7 +1,3 @@
-Below is a comprehensive README file in Markdown format. You can save it as `README.md` at the root of your repository.
-
----
-
 # Explainable-AI: Extended Probabilistic Label Trees (EPLT)
 
 [![Python build](https://github.com/mwydmuch/napkinXC/actions/workflows/python-test-build.yml/badge.svg)](https://github.com/mwydmuch/napkinXC/actions/workflows/python-test-build.yml)

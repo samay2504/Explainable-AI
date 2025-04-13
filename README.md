@@ -195,9 +195,11 @@ The foundation for this repository is built on the napkinXC framework by [Marek 
 
 ---
 
-## License
-
-This project is distributed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
+## Authors
+```
+Atharva Date @adiitj
+Samay Mehar @samay2504
+```
 
 ---
 

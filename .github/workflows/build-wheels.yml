@@ -1,0 +1,112 @@
+name: Build Python wheels and make PyPI release
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-wheels.yml'
+      - 'python/**'
+      - 'src/**'
+      - 'CMakeLists.txt'
+      - 'setup.py'
+      - 'pyproject.toml'
+  release:
+    types: [published]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        #os: [ ubuntu-22.04, macos-13, macos-14, windows-2022 ]
+        os: [ ubuntu-22.04, macos-13, macos-14 ]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Report OS
+        run: |
+          echo ${{ matrix.os }}
+          echo ${{ runner.os }}
+          uname -p
+
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      - name: Build manylinux wheels
+        if: matrix.os == 'ubuntu-22.04'
+        uses: pypa/cibuildwheel@v2.19.2
+        env:
+          # Configure cibuildwheel to build native archs, and some emulated ones
+          CIBW_ARCHS_LINUX: x86_64 aarch64
+          CIBW_BUILD_VERBOSITY: 1
+  
+      - name: Build macOS Intel wheels
+        if: matrix.os == 'macos-12' || matrix.os == 'macos-13'
+        uses: pypa/cibuildwheel@v2.19.2
+        env:
+          CIBW_ARCHS_MACOS: x86_64
+          CIBW_ENVIRONMENT_MACOS: HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 MACOSX_DEPLOYMENT_TARGET=12.0
+          CIBW_BUILD_VERBOSITY: 1
+
+      - name: Build macOS Apple Silicon wheels
+        if: matrix.os == 'macos-14'
+        uses: pypa/cibuildwheel@v2.19.2
+        env:
+          CIBW_ARCHS_MACOS: arm64
+          CIBW_ENVIRONMENT_MACOS: HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 MACOSX_DEPLOYMENT_TARGET=14.0
+          CIBW_BUILD_VERBOSITY: 1
+
+      - name: Report built wheels
+        run: |
+          ls -l ./wheelhouse/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-sdist
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    name: Upload to PyPI
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - name: Download all dists
+        uses: actions/download-artifact@v4
+        with:
+          pattern: artifact-*
+          merge-multiple: true
+          path: dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}

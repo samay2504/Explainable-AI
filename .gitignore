@@ -1,0 +1,58 @@
+# C++ & CMake
+**/CMakeCache.txt
+**/CMakeFiles
+**/CMakeScripts
+**/cmake_install.cmake
+**/Makefile
+*.cbp
+*.a
+*.so
+*.dylib
+*.lib
+src/nmslib
+src/version.h
+build
+**/install_manifest.txt
+**/nxc
+
+# Python
+dist
+pybind11
+*.pyc
+*.pyd
+
+# Docs
+docs/*/*
+
+# Experiments and examples
+data
+test-data
+models*
+results*
+eurlex-model
+test-eurlex-model
+*.bin
+
+# Windows MSVC
+.vs
+*.sln
+*.suo
+*.sdf
+*.vcxproj*
+*.cmd
+*.obj
+*.iobj
+*.exe
+*.ilk
+*.pdb
+*.tlog
+*.exp
+*.recipe
+
+
+# Misc
+.idea
+.DS_Store
+*.log
+cmake-build-debug/
+cmake-build-release/
